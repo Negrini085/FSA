@@ -1,5 +1,5 @@
 #Cartella per generatore random
-RND:=../RANDOM_GEN
+RND:=../RandomGen
 CXXFLAGS:= -Wall -pedantic
 
 CC = g++
