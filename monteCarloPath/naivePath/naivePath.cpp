@@ -85,11 +85,28 @@ void stampaConfig(const vector<double> &contenitore){
     }
 
     else{
+        cout << endl;
         cout << "Elementi del vettore: " << endl;
         for(int i=0; i<int(size(contenitore)); i++) {
             cout << contenitore[i] << endl;
         }
-        cout << endl << endl;
+        cout << endl;
+    }
+}
+
+// Stampo i parametri della simulazione
+void stampaPar(const vector<double> &contenitore){
+    if(size(contenitore) == 0){
+        cout << "Contenitore dei parametri vuoto, non abbiamo alcun parametro simulativo!" << endl;
+    }
+
+    else{
+        cout << endl;
+        cout << "Parametri per la simulazione" << endl;
+        cout << "Beta: " << contenitore[0] << endl;
+        cout << "Numero di completezze: " << int(contenitore[1]) << endl;
+        cout << "Numero di iterazioni: " << int(contenitore[2]) << endl;
+        cout << endl;
     }
 }
 
@@ -113,6 +130,7 @@ int main(int argc, char* argv[]){
 
     // Leggo i parametri iniziali
     parametriSimulativi(nome_par, paramIn);
+    stampaPar(paramIn);
 
     delete generator;
     return 0;
