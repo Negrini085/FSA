@@ -151,9 +151,9 @@ int mossaCammino(double dt, double delta, TRandom* generatore, vector<double> & 
 void istoPosizioni(vector<int> &histo, double pos) {
 
     double appo = pos + 4;
-    int index = int(appo * 20);
+    int index = int(appo * 10);
     
-    if(index < 159){ histo[index] += 1; }
+    if(index <= 79){ histo[index] += 1; }
 }
 
 // Metodo per stampare l'istogramma
@@ -162,8 +162,10 @@ void stampaHisto(string nome, const vector<int> &histo, int Niter) {
     ofstream fileout;
     fileout.open(nome);
 
+    double appo = 0;
     for(int i = 0; i<int(size(histo)); i++) {
-        fileout << double(histo[i])/Niter << endl;
+        appo = double(histo[i])/Niter;
+        fileout << appo << endl;
     }
 
     fileout.close();
@@ -201,7 +203,7 @@ int main(int argc, char* argv[]){
 
     // Contenitore per istogramma e studio accettazione delle mosse
     int accRate = 0;
-    vector<int> histo(160, 0);
+    vector<int> histo(80, 0);
 
     double dt = beta/Ncompl;    //Intervallo di tempo immaginario
     for(int i=0; i<Niter; i++){
