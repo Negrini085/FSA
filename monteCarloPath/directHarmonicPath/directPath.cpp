@@ -76,13 +76,6 @@ void stampaPar(const vector<double> &contenitore){
     }
 }
 
-// Funzione gaussiana
-double gaussiana(double x, double x1, double sigma) {
-    double coeff = 1.0 / (sigma * sqrt(2.0 * M_PI)); 
-    double exponent = - (pow((x - x1), 2)) / (2 * pow(sigma, 2));  
-    return coeff * exp(exponent);
-}
-
 // Algoritmo per fare sampling del cammino di singola particella che vogliamo descrivere
 // Levy harmonic algorithm, in questo caso consideriamo starting ed ending point come coincidenti
 void mossaCammino(double dt, int Nid, TRandom* generatore, vector<double> &config){
