@@ -71,7 +71,7 @@ void stampaPar(const vector<double> &contenitore){
         cout << "Beta: " << contenitore[0] << endl;
         cout << "Numero di completezze: " << int(contenitore[1]) << endl;
         cout << "Numero di iterazioni: " << int(contenitore[2]) << endl;
-        cout << "Starting point: " << contenitore[4] << endl;
+        cout << "Starting point: " << contenitore[3] << endl;
         cout << endl;
     }
 }
