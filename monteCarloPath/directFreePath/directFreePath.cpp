@@ -12,7 +12,7 @@ using namespace std;
 //              1° riga     --> beta
 //              2° riga     --> numero di completezze
 //              3° riga     --> numero di iterazioni
-//              4° riga     --> starting point 
+//              4° riga     --> dimensioni box
 
 
 // Leggo parametri simulativi
@@ -42,7 +42,7 @@ void parametriSimulativi(string nome, vector<double> &contenitore){
         cout << "Beta" << endl; 
         cout << "Numero completezze" << endl; 
         cout << "Numero iterazioni" << endl; 
-        cout << "Starting point catena" << endl; 
+        cout << "Dimensioni box" << endl; 
         exit(-1);
     }
 
@@ -71,7 +71,7 @@ void stampaPar(const vector<double> &contenitore){
         cout << "Beta: " << contenitore[0] << endl;
         cout << "Numero di completezze: " << int(contenitore[1]) << endl;
         cout << "Numero di iterazioni: " << int(contenitore[2]) << endl;
-        cout << "Starting point: " << contenitore[4] << endl;
+        cout << "Dimensioni box: " << contenitore[3] << endl;
         cout << endl;
     }
 }
@@ -83,29 +83,36 @@ double gaussiana(double x, double x1, double sigma) {
     return coeff * exp(exponent);
 }
 
-
-// Metodo per la formazione dell'istogramma
-void istoPosizioni(vector<int> &histo, double pos) {
-
-    double appo = pos + 4;
-    int index = int(appo * 10);
+// Metodo per costruire cammino di evoluzione libera, punto iniziale randomico fra 0 ed L
+void mossaCammino(double dt, double L, int Nid, TRandom* generatore, vector<double> &config){
     
-    if(index <= 79){ histo[index] += 1; }
+    // Scelgo punto iniziale per il cammino (estratto uniformemente in 0 -> L)
+    double start = generatore -> Uniform(0, L);
+    double end = start; double dt1 = 0;
+    config[0] = start;
+
+    double mean, sigma;
+
+    for(int i=1; i<int(size(config)); i++) {
+        dt1 = int((size(config) - i)) * dt;
+
+        // Calcolo valore medio e varianza della gaussiana
+        mean = (dt1 * config[i-1] + dt * end)/(dt + dt1);
+        sigma = 1/sqrt(1/dt1 + 1/dt);
+
+        // Campiono la mossa
+        config[i] = mean + generatore -> Gaus(0, sigma);
+    }
 }
 
-// Metodo per stampare l'istogramma
-void stampaHisto(string nome, const vector<int> &histo, int Niter) {
+// Metodo per stampare la configurazione
+void stampaConfig(ofstream &fileOut, const vector<double> &config) {
 
-    ofstream fileout;
-    fileout.open(nome);
-
-    double appo = 0;
-    for(int i = 0; i<int(size(histo)); i++) {
-        appo = double(histo[i])/Niter;
-        fileout << appo << endl;
+    for(int i = 0; i<int(size(config)); i++) {
+        fileOut << config[i] << "    ";
     }
+    fileOut << endl;
 
-    fileout.close();
 }
 
 
@@ -130,20 +137,21 @@ int main(int argc, char* argv[]){
     double beta = paramIn[0];
     int Ncompl = int(paramIn[1]);
     int Niter = int(paramIn[2]);
-    vector<double> config(Ncompl, 0); config[0] = paramIn[3];
+    double L = paramIn[3];
+    vector<double> config(Ncompl, 0);
 
-    // Contenitore per istogramma e studio accettazione delle mosse
+    // Contenitori & variabili per istogramma e studio dei cammini
     vector<int> histo(80, 0);
+    ofstream fileOut; fileOut.open("camminiFree.dat");
 
     double dt = beta/Ncompl;    //Intervallo di tempo immaginario
     for(int i=0; i<Niter; i++){
-        istoPosizioni(histo, config[0]);
+        mossaCammino(dt, L, Ncompl, generator, config);
+        stampaConfig(fileOut, config);
     }
 
-    cout << endl;
-    cout << "Stampa dell'istogramma a file: histo.dat" << endl;
-    stampaHisto("histo.dat", histo, Niter);
 
+    fileOut.close();
     delete generator;
     return 0;
 }

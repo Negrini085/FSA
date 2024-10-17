@@ -4,8 +4,8 @@ INCS:=`root-config --cflags`
 %.o : %.cpp
 	g++ -Wall -c $< ${INCS}
 
-directPath: directPath.o
+directFreePath: directFreePath.o
 	g++ -O3 -Wall -o $@ $^ ${LIBS}
 
 clean:
-	rm *.o directPath
+	rm *.o directFreePath
