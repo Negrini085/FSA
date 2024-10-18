@@ -10,9 +10,8 @@ using namespace std;
 
 
 //  ATTENZIONE: il file param.dat contiene i parametri da fornire per la simulazione 
-//              1° riga     --> beta minimo
-//              2° riga     --> beta massimo
-//              3° riga     --> numero di particelle
+//              1° riga     --> beta
+//              2° riga     --> numero di particelle
 
 
 /***********************************************
@@ -40,13 +39,12 @@ void parametriSimulativi(string nome, vector<double> &contenitore){
         conta++;
     }
 
-    if(conta != 4){
+    if(conta != 3){
         cout << "File dei parametri con input errati!" << endl;
         cout << "Formato richiesto: " << endl;
         cout << "1° riga    --> Beta minimo" << endl; 
-        cout << "2° riga    --> Beta massimo" << endl; 
-        cout << "3° riga    --> Numero particelle" << endl; 
-        cout << "4° riga    --> Vuota" << endl; 
+        cout << "2° riga    --> Numero particelle" << endl; 
+        cout << "3° riga    --> Vuota" << endl; 
         exit(-1);
     }
 
@@ -72,9 +70,8 @@ void stampaPar(const vector<double> &contenitore){
     else{
         cout << endl;
         cout << "Parametri per la simulazione" << endl;
-        cout << "Beta minimo: " << contenitore[0] << endl;
-        cout << "Beta massimo: " << contenitore[1] << endl;
-        cout << "Numero di particelle: " << contenitore[2] << endl;
+        cout << "Beta: " << contenitore[0] << endl;
+        cout << "Numero di particelle: " << contenitore[1] << endl;
         cout << endl;
     }
 }
@@ -113,6 +110,10 @@ vector<double> canonicRecursion(const vector<double> &weight){
     return fPart;
 }
 
+
+/******************************************************
+*    Campionamento delle permutazioni del sistema     *
+******************************************************/
 
 // Funzione per fare tower sampling
 int towerSample(const vector<double> &prob, TRandom3* generatore) {
@@ -158,6 +159,106 @@ vector<int> cicliDiretti(const vector<double> &weight, const vector<double> &fPa
 }
 
 
+/******************************************************
+*   Campionamento delle configurazioni del sistema    *
+******************************************************/
+
+// Algoritmo per fare sampling del cammino di singola particella che vogliamo descrivere
+// Levy harmonic algorithm, in questo caso consideriamo starting ed ending point come coincidenti
+void mossaCammino(double dt, int kPart, TRandom* generatore, double first, vector<double> &config){
+    
+    //Scelgo punto d'inizio per il cammino
+    double start = first;
+    double end = start;
+    config[0] = first;
+
+    //Calcolo elementi necessari per gaussiana
+    double y1, y2;
+    double mean, sigma;
+
+    for(int i=1; i<kPart; i++){
+        y1 = 1/tanh(dt) + 1/tanh((kPart - i) * dt);
+        y2 = start/sinh(dt) + end/sinh((kPart - i) * dt);
+
+        mean = y2/y1; sigma = 1/sqrt(y1);
+        config[i] = mean + generatore -> Gaus(0, sigma);
+
+        start = config[i];
+    }
+
+    config.push_back(end);
+
+}
+
+// Bosoni armonici diretti
+vector<double> bosoniDiretti(double beta, const vector<double> &weight, const vector<double> &fPart, TRandom3* generatore){
+    double first = 0;
+    vector<double> appo;
+    vector<double> cordx;
+    vector<double> cordy;
+    vector<double> cordz;
+    vector<double> conftot;
+
+    // Determino i cicli con i quali stiamo lavorando
+    vector<int> lCicli = cicliDiretti(weight, fPart, generatore);
+
+    // Riempio il vettore delle configurazioni
+    for(int i=0; i<int(size(lCicli)); i++){
+        // Considero solo quei cicli di permutazioni non vuote
+        if(lCicli[i] != 0){
+
+            // Lavoro tutte le volte che è necessario
+            for(int j=0; j<lCicli[i]; j++){
+
+                // Coordinata x
+                first = generatore -> Gaus(0, 1/sqrt(beta));
+                mossaCammino(beta, i, generatore, first, appo);
+
+                cordx.insert(cordx.end(), appo.begin(), appo.end());
+                appo.clear();
+
+
+                // Coordinata y
+                first = generatore -> Gaus(0, 1/sqrt(beta));
+                mossaCammino(beta, i, generatore, first, appo);
+
+                cordy.insert(cordy.end(), appo.begin(), appo.end());
+                appo.clear();
+
+
+                // Coordinata z
+                first = generatore -> Gaus(0, 1/sqrt(beta));
+                mossaCammino(beta, i, generatore, first, appo);
+
+                cordz.insert(cordz.end(), appo.begin(), appo.end());
+                appo.clear();
+            }
+        }
+    }    
+    cout << "daje" << endl;
+
+    // Contenitore per le varie coordinate
+    conftot.insert(conftot.end(), cordx.begin(), cordx.end());
+    conftot.insert(conftot.end(), cordy.begin(), cordy.end());
+    conftot.insert(conftot.end(), cordz.begin(), cordz.end());
+
+
+    return conftot;
+}
+
+
+void stampaConf(string name, const vector<double> &conf){
+    ofstream fileout;
+    fileout.open(name);
+
+    for(int i=0; i<int(size(conf)); i++) {
+        fileout << conf[i] << endl;
+    }
+
+    fileout.close();
+}
+
+
 
 int main(int argc, char* argv[]){
 
@@ -169,6 +270,7 @@ int main(int argc, char* argv[]){
     string nome_par = argv[1];
 
     vector<double> paramIn;
+    vector<double> conf;
     TRandom3* generator = new TRandom3();
 
 
@@ -177,40 +279,23 @@ int main(int argc, char* argv[]){
     stampaPar(paramIn);
 
     // Parametri per la simulazione
-    double betamin = paramIn[0];
-    double betamax = paramIn[1];
-    int Npart = int(paramIn[2]);
+    double beta = paramIn[0];
+    int Npart = int(paramIn[1]);
 
 
     // Calcolo i pesi delle permutazioni e la loro derivata
     vector<double> weight;
     vector<double> fPart;
-    double beta = 0.30;
-
-    double dbeta = 0.01;
-    int Nmax = int((betamax - betamin)/dbeta);
     
-    
+    cout << "Determinazione dei pesi" << endl;
     weightCalc(beta, Npart, weight);
     fPart = canonicRecursion(weight);
 
-    vector<int> prova = cicliDiretti(weight, fPart, generator);
+    // Studio le configurazioni del sistema
+    cout << "Campionamento della configurazione" << endl;
+    conf = bosoniDiretti(beta, weight, fPart, generator);
+    stampaConf("bosConf.dat", conf);
 
-    double appo = 0;
-    for(int i=0; i<int(size(prova)); i++) {
-        appo += prova[i] * (i+1);
-        cout << prova[i] << endl;
-    }
-
-    cout << endl << appo << endl;
-    // Cicliamo a varie temperature per vedere il comportamento del sistema 
-    // al variare della temperatura
-    //for(int i = 0; i<Nmax; i++) {
-    //    beta = betamax - dbeta * i;
-    //    weightCalc(beta, Npart, weight);
-//
-    //    weight.clear();
-    //}
 
     delete generator;
     return 0;
