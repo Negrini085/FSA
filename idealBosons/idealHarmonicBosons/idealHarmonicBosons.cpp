@@ -99,7 +99,7 @@ void derWeightCalc(const double &beta, const int &Npart, const vector<double> we
 }
 
 // Funzione per il calcolo ricorsivo della funzione di partizione
-double canonicRecursion(const vector<double> &weight){
+vector<double> canonicRecursion(const vector<double> &weight){
     vector<double> fPart; double appo = 0;
     fPart.push_back(1);
     
@@ -110,7 +110,51 @@ double canonicRecursion(const vector<double> &weight){
         fPart.push_back(appo/m); appo = 0;
     } 
 
-    return fPart[int(size(weight))];
+    return fPart;
+}
+
+
+// Funzione per fare tower sampling
+int towerSample(const vector<double> &prob, TRandom3* generatore) {
+    vector<double> cumulativa;
+    cumulativa.push_back(0);
+    for(int i=0; i<int(size(prob)); i++){
+        cumulativa.push_back(cumulativa[i] + prob[i]);
+    }
+
+    int ind = 0;
+    double val = generatore -> Uniform(0, cumulativa[int(size(cumulativa))-1]);
+    for(int i=0; i<int(size(cumulativa))-1; i++){
+        if(cumulativa[i] <= val and val <= cumulativa[i+1]){ 
+            ind = i; 
+            return ind;
+        }
+    }
+
+    cout << "Errore in calcolo della permutazione da fare" << endl;
+    cout << "Termino esecuzione del programma!" << endl;
+    exit(-1);
+}
+
+// Funzione per la determinazione diretta dei cicli considerati
+vector<int> cicliDiretti(const vector<double> &weight, const vector<double> &fPart, TRandom3* generatore){
+    vector<int> lCicli(int(size(weight)), 0);
+    int M = int(size(weight)); int ind = 1;
+
+    vector<double> prob;
+    while(M>0){
+
+        // Creo il vettore delle probabilità & trovo indice per tower sampling
+        for(int i=0; i<M; i++){ prob.push_back(weight[i] * fPart[M-1-i]); }
+        ind = towerSample(prob, generatore);
+        
+        // Aggiorno lunghezza ciclo e vario lunghezza permutazione
+        M = M - (ind+1);
+        lCicli[ind] += 1;
+        prob.clear();
+    }
+
+    return lCicli;
 }
 
 
@@ -140,19 +184,33 @@ int main(int argc, char* argv[]){
 
     // Calcolo i pesi delle permutazioni e la loro derivata
     vector<double> weight;
-    vector<double> appo; double beta;
+    vector<double> fPart;
+    double beta = 0.30;
 
     double dbeta = 0.01;
     int Nmax = int((betamax - betamin)/dbeta);
+    
+    
+    weightCalc(beta, Npart, weight);
+    fPart = canonicRecursion(weight);
 
+    vector<int> prova = cicliDiretti(weight, fPart, generator);
+
+    double appo = 0;
+    for(int i=0; i<int(size(prova)); i++) {
+        appo += prova[i] * (i+1);
+        cout << prova[i] << endl;
+    }
+
+    cout << endl << appo << endl;
     // Cicliamo a varie temperature per vedere il comportamento del sistema 
     // al variare della temperatura
-    for(int i = 0; i<Nmax; i++) {
-        beta = betamax - dbeta * i;
-        weightCalc(beta, Npart, weight);
-
-        weight.clear();
-    }
+    //for(int i = 0; i<Nmax; i++) {
+    //    beta = betamax - dbeta * i;
+    //    weightCalc(beta, Npart, weight);
+//
+    //    weight.clear();
+    //}
 
     delete generator;
     return 0;
