@@ -127,7 +127,7 @@ vector<double> canonicRecursionObs(const vector<double> &weight, const vector<do
             pippo += fPart[i] * derWeight[m-i-1] + dfPart[i] * weight[m-i-1];
         } 
         fPart.push_back(appo/m); appo = 0;
-        dfPart.push_back(- pippo/m); pippo = 0;
+        dfPart.push_back(pippo/m); pippo = 0;
     } 
 
     // Calcolo energia e frazione di condensato
