@@ -93,7 +93,7 @@ void weightCalc(const double &beta, const int &Npart, const double &size, vector
 
     for(int i=1; i<=Npart; i++){
         appo = 0;
-        for(int j=0; j<10 *Npart; j++){
+        for(int j=-Npart; j<Npart; j++){
             appo += exp(-i * beta * 2 * pow(M_PI * j/size, 2));
         }
         weight.push_back(pow(appo, 3));
@@ -108,8 +108,8 @@ void derWeightCalc(const double &beta, const int &Npart, const double &size, con
     for(int i=1; i<=Npart; i++){
         appo = 0;
         esp = i * beta * 2 * pow(M_PI/size, 2);
-        for(int j=0; j<10 * Npart; j++) {
-            appo += 2 * pow(j*M_PI/size, 2) * exp(-esp);
+        for(int j=-Npart; j<Npart; j++) {
+            appo += 2 * pow(j*M_PI/size, 2) * exp(-esp * pow(j, 2));
         }
         derWeight.push_back(-3 * i * pow(weight[i-1], 2/3) * appo);
     }
