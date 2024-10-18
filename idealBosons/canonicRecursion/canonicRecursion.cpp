@@ -9,6 +9,11 @@
 using namespace std;
 
 
+//  ATTENZIONE: il file param.dat contiene i parametri da fornire per la simulazione 
+//              1° riga     --> beta minimo
+//              2° riga     --> beta massimo
+//              3° riga     --> numero di particelle
+
 
 /***********************************************
 *        Lettura dei parametri di input        *
@@ -35,12 +40,13 @@ void parametriSimulativi(string nome, vector<double> &contenitore){
         conta++;
     }
 
-    if(conta != 3){
+    if(conta != 4){
         cout << "File dei parametri con input errati!" << endl;
         cout << "Formato richiesto: " << endl;
-        cout << "1° riga    --> Beta" << endl; 
-        cout << "2° riga    --> Numero di particelle" << endl; 
-        cout << "3° riga    --> Vuota" << endl; 
+        cout << "1° riga    --> Beta minimo" << endl; 
+        cout << "2° riga    --> Beta massimo" << endl; 
+        cout << "3° riga    --> Numero particelle" << endl; 
+        cout << "4° riga    --> Vuota" << endl; 
         exit(-1);
     }
 
@@ -66,8 +72,9 @@ void stampaPar(const vector<double> &contenitore){
     else{
         cout << endl;
         cout << "Parametri per la simulazione" << endl;
-        cout << "Beta: " << contenitore[0] << endl;
-        cout << "Numero di particelle: " << contenitore[1] << endl;
+        cout << "Beta minimo: " << contenitore[0] << endl;
+        cout << "Beta massimo: " << contenitore[1] << endl;
+        cout << "Numero di particelle: " << contenitore[2] << endl;
         cout << endl;
     }
 }
@@ -140,6 +147,26 @@ vector<double> canonicRecursionObs(const vector<double> &weight, const vector<do
     return fPart;
 }
 
+// Funzione per stampare gli osservabili di nostro interesse a file
+void stampaOss(const vector<double> usedBeta, const vector<double> energy, const vector<double> confrac, string name) {
+
+    if(int(size(energy)) != int(size(confrac))) {
+        cout << "Dimensioni differenti dei vettori delle energie e delle frazioni di condensato." << endl;
+        cout << "Termine esecuzione programma" << endl;
+        exit(-2);
+    }
+
+    ofstream fileout;
+    fileout.open(name);
+
+    int dim = int(size(energy));
+    for(int i=0; i<dim; i++){
+        fileout << usedBeta[i] << "    " << energy[i] << "    " << confrac[i] << endl;
+    }
+
+    fileout.close();
+}
+
 
 int main(int argc, char* argv[]){
 
@@ -159,24 +186,50 @@ int main(int argc, char* argv[]){
     stampaPar(paramIn);
 
     // Parametri per la simulazione
-    double beta = paramIn[0];
-    int Npart = int(paramIn[1]);
+    double betamin = paramIn[0];
+    double betamax = paramIn[1];
+    int Npart = int(paramIn[2]);
 
 
     // Calcolo i pesi delle permutazioni e la loro derivata
     vector<double> weight;
     vector<double> derWeight;
-    vector<double> appo;
+    vector<double> appo; double beta;
 
-    weightCalc(beta, Npart, weight);
-    derWeightCalc(beta, Npart, weight, derWeight);
+    vector<double> energy;
+    vector<double> confrac;
+    vector<double> usedBeta;
 
-    appo = canonicRecursionObs(weight, derWeight);
+    double dbeta = 0.01;
+    int Nmax = int((betamax - betamin)/dbeta);
 
-    // Calcolo ricorsivamente la funzione di partizione
-    cout << "La funzione di partizione ha valore: " << canonicRecursion(weight) << endl;
-    cout << "L'energia del sistema è: " << appo[int(size(appo)) - 2] << endl;
-    cout << "La frazione di condensato è: " << appo[int(size(appo)) - 1]/Npart << endl;
+    // Cicliamo a varie temperature per vedere il comportamento del sistema 
+    // al variare della temperatura
+    for(int i = 0; i<Nmax; i++) {
+        beta = betamax - dbeta * i;
+        weightCalc(beta, Npart, weight);
+        derWeightCalc(beta, Npart, weight, derWeight);
+
+        // Ricorsione per determinazione della temperatura
+        appo = canonicRecursionObs(weight, derWeight);
+
+        usedBeta.push_back(beta);
+        energy.push_back(appo[Npart+1]);
+        confrac.push_back(appo[Npart+2]/Npart);
+
+        if(i%100 == 0 and i > 0){
+            cout << "Fatte prime " << i << " temperature!" << endl;
+        }
+
+        weight.clear();
+        derWeight.clear();
+
+    }
+
+    
+    // Stampo a file i parametri d'interesse della nostra indagine, ossia
+    // frazione di condensato ed energia del sistema bosonico
+    stampaOss(usedBeta, energy, confrac, "osservabili.dat");
 
     delete generator;
     return 0;

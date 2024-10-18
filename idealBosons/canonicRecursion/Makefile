@@ -4,8 +4,8 @@ INCS:=`root-config --cflags`
 %.o : %.cpp
 	g++ -Wall -c $< ${INCS}
 
-idealHarmonic: idealHarmonic.o
+canonicRecursion: canonicRecursion.o
 	g++ -O3 -Wall -o $@ $^ ${LIBS}
 
 clean:
-	rm *.o idealHarmonic
+	rm *.o canonicRecursion
