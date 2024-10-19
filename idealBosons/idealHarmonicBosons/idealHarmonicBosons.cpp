@@ -170,7 +170,7 @@ void mossaCammino(double dt, int kPart, TRandom* generatore, double first, vecto
     //Scelgo punto d'inizio per il cammino
     double start = first;
     double end = start;
-    config[0] = first;
+    config.push_back(first);
 
     //Calcolo elementi necessari per gaussiana
     double y1, y2;
@@ -181,12 +181,14 @@ void mossaCammino(double dt, int kPart, TRandom* generatore, double first, vecto
         y2 = start/sinh(dt) + end/sinh((kPart - i) * dt);
 
         mean = y2/y1; sigma = 1/sqrt(y1);
-        config[i] = mean + generatore -> Gaus(0, sigma);
+        config.push_back(mean + generatore -> Gaus(0, sigma));
 
         start = config[i];
     }
 
-    config.push_back(end);
+    if(kPart > 0) {
+        config.push_back(end);
+    }
 
 }
 
@@ -209,11 +211,11 @@ vector<double> bosoniDiretti(double beta, const vector<double> &weight, const ve
 
             // Lavoro tutte le volte che è necessario
             for(int j=0; j<lCicli[i]; j++){
-
+                
                 // Coordinata x
                 first = generatore -> Gaus(0, 1/sqrt(beta));
                 mossaCammino(beta, i, generatore, first, appo);
-
+                
                 cordx.insert(cordx.end(), appo.begin(), appo.end());
                 appo.clear();
 
@@ -235,7 +237,6 @@ vector<double> bosoniDiretti(double beta, const vector<double> &weight, const ve
             }
         }
     }    
-    cout << "daje" << endl;
 
     // Contenitore per le varie coordinate
     conftot.insert(conftot.end(), cordx.begin(), cordx.end());
