@@ -1,5 +1,5 @@
 timeslices				300
-temperature				0.5
+temperature				0.25
 imaginaryTimePropagation		8.0
                                                                                                                  
 brownianMotionReconstructions           100
