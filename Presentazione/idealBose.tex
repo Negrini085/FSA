@@ -1,0 +1,38 @@
+\documentclass{beamer}
+\usepackage{amsfonts,amsmath,oldgerm}
+\usetheme{_statale}
+\usefonttheme[onlymath]{serif}
+
+\usepackage{enumitem}
+\usepackage[italian]{babel}
+\usepackage{xcolor}
+\usepackage{graphicx}
+
+\usepackage{hyperref}
+\newcommand{\hypercite}[2]{\href{#1}{\cite{#2}}}
+
+\usepackage[backend=biber, style=authoryear]{biblatex}
+\addbibresource{bibliografia.bib}
+
+%\newcommand{\testcolor}[1]{\colorbox{#1}{\textcolor{#1}{test}}~\texttt{#1}}
+%\newcommand{\hrefcol}[2]{\textcolor{cyan}{\href{#1}{#2}}}
+\titlebackground*{assets/background}
+
+\renewcommand{\figurename}{Figura}
+
+
+\title{Gas di Bose ideali: analisi teorica e computazionale}
+\course{Fisica Statistica Avanzata}
+\author{Filippo Negrini}
+\IDnumber{Matricola: 47127A}
+\date{}
+
+
+\begin{document}
+\maketitle
+
+
+\input{Sezioni/studioTeorico}
+\input{Sezioni/backup}
+
+\end{document}
