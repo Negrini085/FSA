@@ -130,6 +130,23 @@ vector<double> canonicRecursionObs(const vector<double> &weight, const vector<do
         dfPart.push_back(pippo/m); pippo = 0;
     } 
 
+//    cout << "La funzione di partizione è pari a: " << endl;
+//    cout << "Z0: " << fPart[0] << endl;
+//    cout << "Z1: " << fPart[1] << endl;
+//    cout << "Z2: " << fPart[2] << endl;
+//    cout << "Z3: " << fPart[3] << endl;
+//    cout << "Z4: " << fPart[4] << endl;
+//    cout << "Z5: " << fPart[5] << endl;
+//
+//    cout << endl << endl;
+//    cout << "La derivata della funzione di partizione è pari a: " << endl;
+//    cout << "Z0: " << dfPart[0] << endl;
+//    cout << "Z1: " << dfPart[1] << endl;
+//    cout << "Z2: " << dfPart[2] << endl;
+//    cout << "Z3: " << dfPart[3] << endl;
+//    cout << "Z4: " << dfPart[4] << endl;
+//    cout << "Z5: " << dfPart[5] << endl;
+
     // Calcolo energia e frazione di condensato
     appo = -dfPart[int(size(weight))]/fPart[int(size(weight))];
     pippo = 0;
@@ -205,7 +222,7 @@ int main(int argc, char* argv[]){
 
     // Cicliamo a varie temperature per vedere il comportamento del sistema 
     // al variare della temperatura
-    for(int i = 0; i<Nmax; i++) {
+    for(int i = 0; i<=Nmax; i++) {
         beta = betamax - dbeta * i;
         weightCalc(beta, Npart, weight);
         derWeightCalc(beta, Npart, weight, derWeight);
